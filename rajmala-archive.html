@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Rajmala Archive — shared study notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14120F;
+  --surface:#1D1913;
+  --surface2:#241F18;
+  --raised:#2B2419;
+  --border:#3B3225;
+  --border-soft:#2E271C;
+  --bronze:#B8894F;
+  --bronze-light:#D8AE7C;
+  --bronze-dim:#7A5E3B;
+  --verdigris:#6E8B7A;
+  --verdigris-light:#8FAC9B;
+  --bone:#EDE6D9;
+  --bone-dim:#C9C0AF;
+  --ink:#A79C8A;
+  --ink-faint:#6E6555;
+  --red:#9C4A42;
+  --red-light:#C97268;
+  --radius-sm:4px;
+  --radius-md:6px;
+  font-size:16px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);}
+body{
+  font-family:'Source Sans 3',sans-serif;
+  color:var(--bone);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--bronze-dim);color:var(--bone);}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:var(--bronze-dim);}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;}
+h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+a{color:var(--bronze-light);}
+
+.hidden{display:none !important;}
+
+#app{height:100vh;display:flex;flex-direction:column;}
+
+/* ---------- Topbar ---------- */
+#topbar{
+  height:60px;min-height:60px;
+  display:flex;align-items:center;gap:14px;
+  padding:0 18px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border-soft);
+  z-index:40;
+}
+#hamburger{
+  display:none;
+  background:none;border:none;color:var(--bone);padding:6px;
+}
+.brand{display:flex;flex-direction:column;line-height:1.1;white-space:nowrap;}
+.brand .mark{font-family:'Fraunces',serif;font-weight:600;font-size:20px;letter-spacing:.2px;color:var(--bone);}
+.brand .mark span{color:var(--bronze-light);}
+.brand .tagline{font-size:11px;color:var(--ink-faint);letter-spacing:.4px;margin-top:1px;}
+.searchWrap{flex:1;display:flex;justify-content:center;}
+.searchInner{position:relative;width:100%;max-width:420px;}
+.searchInner input{
+  width:100%;height:36px;padding:0 12px 0 34px;border-radius:var(--radius-md);
+  border:1px solid var(--border);background:var(--surface2);color:var(--bone);
+  font-size:14px;
+}
+.searchInner input:focus{outline:none;border-color:var(--bronze-dim);}
+.searchInner svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.55;}
+.topbarRight{display:flex;align-items:center;gap:10px;}
+.sessionTime{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.sessionTime .dot{width:6px;height:6px;border-radius:50%;background:var(--verdigris);flex:none;}
+.userBadge{
+  display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);
+  padding:5px 8px 5px 10px;border-radius:20px;
+}
+.userBadge .initial{
+  width:22px;height:22px;border-radius:50%;background:var(--bronze-dim);color:var(--bone);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none;
+}
+.userBadge span{font-size:13px;color:var(--bone-dim);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.userBadge button{background:none;border:none;color:var(--ink);display:flex;padding:2px;}
+.userBadge button:hover{color:var(--bronze-light);}
+
+/* ---------- Layout ---------- */
+.layout{flex:1;display:flex;min-height:0;position:relative;}
+#backdrop{
+  display:none;position:fixed;inset:0;background:rgba(10,9,7,.55);z-index:45;
+}
+
+#sidebar{
+  width:270px;min-width:270px;background:var(--surface);border-right:1px solid var(--border-soft);
+  display:flex;flex-direction:column;overflow-y:auto;padding:16px 12px 20px;
+}
+.navSection{margin-bottom:20px;}
+.navLabel{
+  font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint);
+  padding:0 10px;margin-bottom:8px;
+}
+.navItem{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:none;border:none;color:var(--bone-dim);padding:8px 10px;border-radius:var(--radius-sm);
+  font-size:14px;margin-bottom:2px;
+}
+.navItem:hover{background:var(--surface2);color:var(--bone);}
+.navItem.active{background:var(--surface2);color:var(--bone);box-shadow:inset 2px 0 0 var(--bronze);}
+.navItem .seal{
+  width:22px;height:22px;border-radius:3px;background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+  color:var(--bronze-light);flex:none;font-family:'IBM Plex Mono',monospace;
+}
+.navItem.active .seal{border-color:var(--bronze-dim);}
+.navItem .label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.navItem .count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);}
+.navItem.special .seal{color:var(--verdigris-light);}
+
+.addCatRow{padding:0 10px;margin-top:4px;}
+.addCatBtn{
+  background:none;border:1px dashed var(--border);color:var(--ink);width:100%;
+  padding:7px 10px;border-radius:var(--radius-sm);font-size:13px;display:flex;align-items:center;gap:8px;
+}
+.addCatBtn:hover{color:var(--bronze-light);border-color:var(--bronze-dim);}
+.addCatForm{display:none;gap:6px;padding:0 10px;margin-top:6px;}
+.addCatForm.show{display:flex;}
+.addCatForm input{
+  flex:1;height:30px;padding:0 8px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--bone);font-size:13px;
+}
+.addCatForm button{
+  background:var(--bronze-dim);border:none;color:var(--bone);border-radius:var(--radius-sm);
+  padding:0 10px;font-size:13px;
+}
+
+/* ---------- Main ---------- */
+#main{flex:1;overflow-y:auto;padding:26px 32px 60px;min-width:0;}
+.contentHead{
+  display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;
+  margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border-soft);
+}
+.contentHead h1{font-size:26px;font-weight:600;color:var(--bone);}
+.contentHead .sub{font-size:13px;color:var(--ink-faint);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+.headBtns{display:flex;gap:10px;}
+.btn{
+  border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);
+  color:var(--bone-dim);padding:9px 16px;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;
+  transition:border-color .15s;
+}
+.btn:hover{border-color:var(--bronze-dim);color:var(--bone);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.primary{background:var(--bronze-dim);border-color:var(--bronze-dim);color:var(--bone);}
+.btn.primary:hover{background:var(--bronze);}
+.btn.ghost{background:none;}
+.btn.danger{color:var(--red-light);border-color:var(--red);background:none;}
+.btn.danger:hover{background:rgba(156,74,66,.15);}
+.btn.small{padding:6px 11px;font-size:12.5px;}
+
+.notesGrid{display:flex;flex-direction:column;gap:12px;max-width:880px;}
+.noteCard{
+  background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius-md);
+  padding:16px 18px;
+}
+.noteCardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;}
+.catChip{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--verdigris-light);
+  background:rgba(110,139,122,.12);border:1px solid rgba(110,139,122,.3);
+  padding:2px 8px;border-radius:20px;white-space:nowrap;
+}
+.cardActions{display:flex;gap:4px;flex:none;}
+.iconBtn{background:none;border:none;color:var(--ink-faint);padding:5px;border-radius:4px;display:flex;}
+.iconBtn:hover{color:var(--bronze-light);background:var(--raised);}
+.iconBtn.dangerHover:hover{color:var(--red-light);}
+.noteQuestion{
+  font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:var(--bone);
+  cursor:pointer;line-height:1.4;margin-bottom:0;
+}
+.noteAnswer{
+  max-height:0;overflow:hidden;opacity:0;transition:max-height .28s ease,opacity .2s ease,margin .2s ease;
+  font-size:14.5px;color:var(--bone-dim);line-height:1.65;white-space:pre-wrap;
+}
+.noteCard.expanded .noteAnswer{max-height:1000px;opacity:1;margin-top:10px;}
+.tagRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.tag{font-size:11px;color:var(--ink);background:var(--raised);padding:2px 8px;border-radius:20px;}
+.noteMeta{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);margin-top:12px;
+  display:flex;gap:14px;flex-wrap:wrap;
+}
+.emptyState{
+  border:1px dashed var(--border);border-radius:var(--radius-md);padding:50px 30px;text-align:center;
+  color:var(--ink);max-width:520px;
+}
+.emptyState h3{font-size:18px;color:var(--bone-dim);margin-bottom:8px;font-weight:500;}
+.emptyState p{font-size:14px;margin-bottom:18px;}
+
+/* ---------- Stats view ---------- */
+.statsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;max-width:900px;margin-bottom:30px;}
+.metricCard{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:16px 18px;}
+.metricCard .label{font-size:12px;color:var(--ink-faint);margin-bottom:8px;}
+.metricCard .value{font-family:'IBM Plex Mono',monospace;font-size:24px;color:var(--bronze-light);font-weight:500;}
+.statsSection{max-width:900px;margin-bottom:32px;}
+.statsSection h2{font-size:16px;color:var(--bone-dim);font-weight:500;margin-bottom:14px;}
+.userRow{
+  display:grid;grid-template-columns:120px 1fr 70px;align-items:center;gap:14px;margin-bottom:12px;
+}
+.userRow .uname{font-size:13.5px;color:var(--bone-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.barTrack{height:8px;background:var(--raised);border-radius:6px;overflow:hidden;}
+.barFill{height:100%;background:var(--verdigris);border-radius:6px;}
+.userRow .uval{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);text-align:right;}
+.catBarRow{display:grid;grid-template-columns:190px 1fr 40px;align-items:center;gap:14px;margin-bottom:10px;}
+.catBarRow .cname{font-size:13px;color:var(--bone-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.catBarRow .cval{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);text-align:right;}
+.catBarRow .barFill{background:var(--bronze);}
+.recentList{display:flex;flex-direction:column;gap:8px;}
+.recentRow{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border-soft);}
+.recentRow .rq{color:var(--bone-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;}
+.recentRow .rmeta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);white-space:nowrap;}
+
+/* ---------- Type toggle / filters / data buttons ---------- */
+.typeToggle{display:flex;gap:8px;margin-bottom:18px;}
+.typeToggleBtn{flex:1;padding:9px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--ink);font-size:13px;text-align:center;}
+.typeToggleBtn.active{border-color:var(--bronze-dim);color:var(--bone);background:var(--raised);}
+.typeChip{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--border);color:var(--ink);white-space:nowrap;}
+.typeChip.theory{color:var(--bronze-light);border-color:rgba(184,137,79,.35);background:rgba(184,137,79,.1);}
+.filterTabs{display:flex;gap:6px;margin-bottom:18px;}
+.filterTab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--ink);font-size:12.5px;}
+.filterTab.active{background:var(--surface2);color:var(--bone);border-color:var(--bronze-dim);}
+.importSummary{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--bone-dim);margin-bottom:16px;font-family:'IBM Plex Mono',monospace;}
+.dataBtnRow{display:flex;flex-direction:column;gap:6px;padding:0 10px;}
+.dataBtn{display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--border);color:var(--ink);padding:8px 10px;border-radius:var(--radius-sm);font-size:13px;text-align:left;width:100%;}
+.dataBtn:hover{color:var(--bronze-light);border-color:var(--bronze-dim);}
+.journalTheoryBody{max-width:680px;font-size:16px;line-height:1.75;color:var(--bone-dim);white-space:pre-wrap;max-height:58vh;overflow-y:auto;padding-right:8px;text-align:left;}
+
+/* ---------- Modal (editor / profile) ---------- */
+.modalBackdrop{
+  position:fixed;inset:0;background:rgba(10,9,7,.6);display:flex;align-items:center;justify-content:center;
+  z-index:80;padding:20px;
+}
+.modalCard{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;width:100%;max-width:560px;
+  max-height:88vh;overflow-y:auto;padding:24px 26px 22px;
+}
+.modalCard h2{font-size:19px;font-weight:600;margin-bottom:18px;color:var(--bone);}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;color:var(--ink);margin-bottom:6px;}
+.field select,.field textarea,.field input[type=text]{
+  width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--bone);padding:9px 11px;font-size:14px;resize:vertical;
+}
+.field select:focus,.field textarea:focus,.field input:focus{outline:none;border-color:var(--bronze-dim);}
+.field .err{color:var(--red-light);font-size:12px;margin-top:5px;display:none;}
+.field.hasErr .err{display:block;}
+.field.hasErr textarea,.field.hasErr input{border-color:var(--red);}
+.modalFoot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.ledger{
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);
+  border-top:1px solid var(--border-soft);padding-top:12px;margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;
+}
+.profileIntro{font-size:14px;color:var(--ink);margin-bottom:16px;line-height:1.6;}
+
+/* ---------- Reading mode ---------- */
+#readingOverlay{
+  position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;flex-direction:column;
+}
+.readTop{
+  height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;
+  border-bottom:1px solid var(--border-soft);flex:none;
+}
+.readTop .rtLeft{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;}
+.readBody{flex:1;display:flex;align-items:center;justify-content:center;padding:30px;overflow-y:auto;}
+.readCardInner{max-width:640px;width:100%;}
+.readCat{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--verdigris-light);margin-bottom:18px;}
+.readQ{font-family:'Fraunces',serif;font-size:clamp(22px,3.4vw,32px);font-weight:500;line-height:1.4;margin-bottom:26px;}
+.readAns{
+  font-size:16px;line-height:1.75;color:var(--bone-dim);white-space:pre-wrap;
+  max-height:0;overflow:hidden;opacity:0;transition:max-height .3s ease,opacity .25s ease;
+}
+.readAns.show{max-height:2000px;opacity:1;margin-top:6px;}
+.readFoot{
+  height:74px;flex:none;display:flex;align-items:center;justify-content:center;gap:16px;
+  border-top:1px solid var(--border-soft);
+}
+.roundBtn{
+  width:42px;height:42px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--bone-dim);display:flex;align-items:center;justify-content:center;
+}
+.roundBtn:hover{border-color:var(--bronze-dim);color:var(--bone);}
+.roundBtn:disabled{opacity:.35;}
+
+/* ---------- Journal / reel ---------- */
+#journalOverlay{position:fixed;inset:0;background:var(--bg);z-index:90;}
+.journalTop{
+  position:absolute;top:0;left:0;right:0;height:56px;z-index:5;display:flex;align-items:center;
+  justify-content:space-between;padding:0 20px;
+}
+.journalScroll{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;}
+.journalCard{
+  height:100vh;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:90px 30px;position:relative;border-bottom:1px solid var(--border-soft);
+}
+.journalCat{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--verdigris-light);margin-bottom:22px;letter-spacing:.5px;}
+.journalQ{
+  font-family:'Fraunces',serif;font-weight:500;font-size:clamp(24px,4vw,38px);text-align:center;line-height:1.4;
+  max-width:680px;
+}
+.journalHint{
+  margin-top:26px;font-size:12.5px;color:var(--ink-faint);border:1px solid var(--border);border-radius:20px;
+  padding:7px 16px;
+}
+.journalAnsWrap{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:60px 40px;
+  background:var(--surface);opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+.journalCard.revealed .journalAnsWrap{opacity:1;pointer-events:all;}
+.journalAnsInner{max-width:640px;}
+.journalAnsInner .journalCat{margin-bottom:16px;}
+.journalAnsInner .journalQ{font-size:19px;color:var(--ink);margin-bottom:20px;text-align:left;}
+.journalAnsInner .journalA{font-size:16px;line-height:1.75;color:var(--bone-dim);white-space:pre-wrap;text-align:left;}
+.journalEmpty{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);gap:16px;text-align:center;padding:30px;}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  #hamburger{display:flex;}
+  .brand .tagline{display:none;}
+  #sidebar{
+    position:fixed;left:0;top:60px;bottom:0;transform:translateX(-100%);transition:transform .22s ease;
+    z-index:50;box-shadow:2px 0 18px rgba(0,0,0,.4);
+  }
+  #sidebar.open{transform:translateX(0);}
+  #backdrop.show{display:block;}
+  #main{padding:20px 16px 60px;}
+  .searchWrap{order:3;flex-basis:100%;margin-top:8px;}
+  #topbar{flex-wrap:wrap;height:auto;padding:10px 14px;}
+  .userBadge span{display:none;}
+  .contentHead h1{font-size:22px;}
+  .userRow{grid-template-columns:90px 1fr 60px;gap:8px;}
+  .catBarRow{grid-template-columns:120px 1fr 34px;gap:8px;}
+}
+@media (max-width:520px){
+  .modalCard{padding:20px 16px;}
+  .readBody{padding:20px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <button id="hamburger" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 5h16M2 10h16M2 15h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <div class="brand">
+      <div class="mark">Rajmala <span>Archive</span></div>
+      <div class="tagline">a shared notebook for Tripura's history</div>
+    </div>
+    <div class="searchWrap">
+      <div class="searchInner">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="searchInput" type="text" placeholder="Search your notes">
+      </div>
+    </div>
+    <div class="topbarRight">
+      <div class="sessionTime" id="sessionTime" title="Time spent studying this visit"><span class="dot"></span><span id="sessionTimeVal">0m</span></div>
+      <div class="userBadge">
+        <div class="initial" id="userInitial">?</div>
+        <span id="userNameLabel">—</span>
+        <button id="profileGear" aria-label="Edit profile">
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.4"/><path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2M15.1 4.9l-1.4 1.4M6.3 13.7l-1.4 1.4M15.1 15.1l-1.4-1.4M6.3 6.3L4.9 4.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div id="backdrop"></div>
+    <nav id="sidebar">
+      <div class="navSection">
+        <div class="navLabel">Browse</div>
+        <div id="catNavList"></div>
+        <div class="addCatRow">
+          <button class="addCatBtn" id="showAddCatBtn">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 10h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Add a category
+          </button>
+          <div class="addCatForm" id="addCatForm">
+            <input type="text" id="newCatInput" placeholder="Category name" maxlength="40">
+            <button id="confirmAddCat">Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="navSection">
+        <div class="navLabel">Study</div>
+        <button class="navItem special" id="journalNavBtn">
+          <span class="seal">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M4 4.5l12 11M16 4.5L4 15.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          <span class="label">Journal · reel scroll</span>
+        </button>
+        <button class="navItem special" id="statsNavBtn">
+          <span class="seal">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M4 16V9M10 16V4M16 16v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          <span class="label">Study time &amp; stats</span>
+        </button>
+      </div>
+      <div class="navSection">
+        <div class="navLabel">Your data</div>
+        <div class="dataBtnRow">
+          <button class="dataBtn" id="exportBtn">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3v10M6 9l4 4 4-4M4 16.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Export backup
+          </button>
+          <button class="dataBtn" id="importBtn">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 13V3M6 7l4-4 4 4M4 16.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Import backup
+          </button>
+        </div>
+        <input type="file" id="importFileInput" accept="application/json" class="hidden">
+      </div>
+    </nav>
+
+    <main id="main"></main>
+  </div>
+</div>
+
+<div id="editorModal" class="modalBackdrop hidden">
+  <div class="modalCard">
+    <h2 id="editorTitle">Add a note</h2>
+    <div class="typeToggle" id="typeToggle">
+      <button type="button" class="typeToggleBtn" id="typeBtnQa" data-type="qa">Question &amp; answer</button>
+      <button type="button" class="typeToggleBtn" id="typeBtnTheory" data-type="theory">Theory note</button>
+    </div>
+    <div class="field">
+      <label for="editCategorySelect">Category</label>
+      <select id="editCategorySelect"></select>
+    </div>
+    <div class="field" id="questionField">
+      <label for="editQuestion" id="questionLabel">Question</label>
+      <textarea id="editQuestion" rows="2" placeholder="e.g. Who founded the Manikya dynasty?"></textarea>
+      <div class="err" id="questionErr">Add a question before saving.</div>
+    </div>
+    <div class="field" id="answerField">
+      <label for="editAnswer" id="answerLabel">Answer / notes</label>
+      <textarea id="editAnswer" rows="6" placeholder="Write the answer, in your own words"></textarea>
+      <div class="err" id="answerErr">Add an answer before saving.</div>
+    </div>
+    <div class="field">
+      <label for="editTags">Tags <span style="color:var(--ink-faint)">(optional, comma separated)</span></label>
+      <input type="text" id="editTags" placeholder="e.g. Rajmala, 15th century">
+    </div>
+    <div class="ledger" id="editorLedger"></div>
+    <div class="modalFoot">
+      <button class="btn ghost" id="cancelEditBtn">Cancel</button>
+      <button class="btn primary" id="saveNoteBtn">Save note</button>
+    </div>
+  </div>
+</div>
+
+<div id="profileModal" class="modalBackdrop hidden">
+  <div class="modalCard" style="max-width:420px;">
+    <h2 id="profileModalTitle">Who's studying?</h2>
+    <p class="profileIntro" id="profileIntro">This notebook is shared between you and one friend. Enter a name so your notes and study time are tracked separately.</p>
+    <div class="field">
+      <label for="profileNameInput">Your name</label>
+      <input type="text" id="profileNameInput" placeholder="e.g. Priya" maxlength="30">
+      <div class="err">Enter a name to continue.</div>
+    </div>
+    <div class="modalFoot">
+      <button class="btn ghost hidden" id="cancelProfileBtn">Cancel</button>
+      <button class="btn primary" id="saveProfileBtn">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div id="importModal" class="modalBackdrop hidden">
+  <div class="modalCard" style="max-width:460px;">
+    <h2>Import backup</h2>
+    <div class="importSummary" id="importSummary"></div>
+    <p style="font-size:13px;color:var(--ink);margin-bottom:4px;line-height:1.6;">
+      <strong style="color:var(--bone-dim);">Merge</strong> keeps everything you already have and adds anything new from the file.<br>
+      <strong style="color:var(--bone-dim);">Replace</strong> overwrites your current notebook with the file's contents.
+    </p>
+    <div class="modalFoot">
+      <button class="btn ghost" id="cancelImportBtn">Cancel</button>
+      <button class="btn danger" id="replaceImportBtn">Replace all</button>
+      <button class="btn primary" id="mergeImportBtn">Merge</button>
+    </div>
+  </div>
+</div>
+
+<div id="readingOverlay" class="hidden">
+  <div class="readTop">
+    <div class="rtLeft">
+      <span id="readCategoryLabel">All notes</span>
+      <span>·</span>
+      <span id="readPosition">1 / 1</span>
+    </div>
+    <button class="roundBtn" id="closeReadingBtn" aria-label="Close reading mode">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="readBody">
+    <div class="readCardInner">
+      <div class="readCat" id="readCat"></div>
+      <div class="readQ" id="readQ"></div>
+      <div class="readAns" id="readAns"></div>
+    </div>
+  </div>
+  <div class="readFoot">
+    <button class="roundBtn" id="readPrevBtn" aria-label="Previous">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 4l-7 6 7 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="btn primary" id="readRevealBtn">Show answer</button>
+    <button class="roundBtn" id="readNextBtn" aria-label="Next">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M8 4l7 6-7 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="journalOverlay" class="hidden">
+  <div class="journalTop">
+    <button class="btn small ghost" id="journalShuffleBtn" style="background:var(--surface2);">
+      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="margin-right:6px"><path d="M2 5h4l9 10h3M2 15h4l3-3.3M13 5h5v5M15 5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Shuffle
+    </button>
+    <button class="roundBtn" id="closeJournalBtn" aria-label="Close journal">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="journalScroll" id="journalScroll"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var DEFAULT_CATEGORIES = [
+  "Manikya Dynasty","Modern History of Tripura","Merger & Statehood","Rajmala",
+  "Important Kings","Temples & Monuments","Geography","Rivers & Lakes",
+  "National Parks & Wildlife","Art & Culture","Festivals","Official Language","Administration"
+];
+
+var hasStorage = (typeof window.storage !== "undefined");
+
+function memGet(){ return null; }
+var memStore = {};
+
+async function getShared(key, fallback){
+  if(!hasStorage){ return (key in memStore) ? memStore[key] : fallback; }
+  try{
+    var r = await window.storage.get(key, true);
+    return r ? JSON.parse(r.value) : fallback;
+  }catch(e){ return fallback; }
+}
+async function setShared(key, val){
+  memStore[key] = val;
+  if(!hasStorage) return;
+  try{ await window.storage.set(key, JSON.stringify(val), true); }catch(e){ console.error("storage set failed", key, e); }
+}
+async function getPersonal(key, fallback){
+  if(!hasStorage){ return (key in memStore) ? memStore[key] : fallback; }
+  try{
+    var r = await window.storage.get(key, false);
+    return r ? JSON.parse(r.value) : fallback;
+  }catch(e){ return fallback; }
+}
+async function setPersonal(key, val){
+  memStore[key] = val;
+  if(!hasStorage) return;
+  try{ await window.storage.set(key, JSON.stringify(val), false); }catch(e){ console.error("storage set failed", key, e); }
+}
+
+function esc(s){
+  return (s == null ? "" : String(s)).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+  });
+}
+function uid(){ return "n" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function initials(name){
+  var parts = String(name||"").trim().split(/\s+/).filter(Boolean);
+  if(parts.length === 0) return "?";
+  if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+function formatDuration(sec){
+  sec = Math.max(0, Math.round(sec||0));
+  if(sec < 60) return sec + "s";
+  var m = Math.floor(sec/60);
+  if(m < 60) return m + "m";
+  var h = Math.floor(m/60);
+  m = m % 60;
+  return h + "h " + m + "m";
+}
+function formatDateShort(ts){
+  if(!ts) return "—";
+  var d = new Date(ts);
+  return d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"});
+}
+function formatRelative(ts){
+  if(!ts) return "never";
+  var diff = (Date.now() - ts) / 1000;
+  if(diff < 45) return "just now";
+  if(diff < 3600) return Math.floor(diff/60) + "m ago";
+  if(diff < 86400) return Math.floor(diff/3600) + "h ago";
+  if(diff < 604800) return Math.floor(diff/86400) + "d ago";
+  return formatDateShort(ts);
+}
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i+1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* ---------------- state ---------------- */
+var state = {
+  profile: null,
+  categories: DEFAULT_CATEGORIES.slice(),
+  notes: [],
+  stats: {},
+  currentView: "notes",
+  currentCategory: "__all__",
+  currentType: "all",
+  searchTerm: "",
+  editingNoteId: null,
+  editorOpenedAt: null,
+  editorType: "qa",
+  profileEditMode: false,
+  reading: null,
+  sessionSeconds: 0,
+  pendingImportData: null
+};
+
+var els = {};
+function cacheEls(){
+  ["main","catNavList","sidebar","backdrop","hamburger","editorModal","profileModal",
+   "editCategorySelect","editQuestion","editAnswer","editTags","editorTitle","editorLedger",
+   "questionField","answerField","questionLabel","answerLabel","saveNoteBtn","cancelEditBtn",
+   "typeToggle","typeBtnQa","typeBtnTheory",
+   "exportBtn","importBtn","importFileInput","importModal","importSummary",
+   "cancelImportBtn","replaceImportBtn","mergeImportBtn",
+   "profileNameInput","saveProfileBtn","cancelProfileBtn","profileModalTitle","profileIntro",
+   "userInitial","userNameLabel","profileGear","searchInput",
+   "readingOverlay","readCategoryLabel","readPosition","readCat","readQ","readAns",
+   "readPrevBtn","readNextBtn","readRevealBtn","closeReadingBtn",
+   "journalOverlay","journalScroll","closeJournalBtn","journalShuffleBtn",
+   "showAddCatBtn","addCatForm","newCatInput","confirmAddCat",
+   "journalNavBtn","statsNavBtn","sessionTimeVal"
+  ].forEach(function(id){ els[id] = document.getElementById(id); });
+}
+
+/* ---------------- init ---------------- */
+async function init(){
+  cacheEls();
+  bindStaticEvents();
+  state.categories = await getShared("categories", DEFAULT_CATEGORIES.slice());
+  state.notes = await getShared("notes", []);
+  state.stats = await getShared("stats", {});
+  state.profile = await getPersonal("profile", null);
+
+  if(!state.profile || !state.profile.name){
+    openProfileModal(false);
+  } else {
+    applyProfileToHeader();
+  }
+  render();
+  startHeartbeat();
+}
+
+function applyProfileToHeader(){
+  var name = state.profile && state.profile.name ? state.profile.name : "?";
+  els.userInitial.textContent = initials(name);
+  els.userNameLabel.textContent = name;
+}
+
+/* ---------------- sidebar / nav ---------------- */
+function renderSidebar(){
+  var counts = {};
+  state.notes.forEach(function(n){ counts[n.category] = (counts[n.category]||0) + 1; });
+  var total = state.notes.length;
+
+  var html = "";
+  html += navItemHtml("__all__", "All notes", total, state.currentCategory === "__all__" && state.currentView === "notes");
+  state.categories.forEach(function(cat){
+    html += navItemHtml(cat, cat, counts[cat]||0, state.currentCategory === cat && state.currentView === "notes");
+  });
+  els.catNavList.innerHTML = html;
+
+  Array.prototype.forEach.call(els.catNavList.querySelectorAll(".navItem"), function(btn){
+    btn.addEventListener("click", function(){
+      state.currentCategory = btn.getAttribute("data-cat");
+      state.currentView = "notes";
+      closeMobileSidebar();
+      render();
+    });
+  });
+
+  els.journalNavBtn.classList.toggle("active", false);
+  els.statsNavBtn.classList.toggle("active", state.currentView === "stats");
+}
+function navItemHtml(catKey, label, count, active){
+  return '<button class="navItem'+(active?' active':'')+'" data-cat="'+esc(catKey)+'">'+
+    '<span class="seal">'+esc(initials(catKey === "__all__" ? "AL" : catKey))+'</span>'+
+    '<span class="label">'+esc(label)+'</span>'+
+    '<span class="count">'+count+'</span></button>';
+}
+
+/* ---------------- notes view ---------------- */
+function getFilteredNotes(){
+  var list = state.currentCategory === "__all__" ? state.notes.slice() : state.notes.filter(function(n){ return n.category === state.currentCategory; });
+  if(state.currentType !== "all"){
+    list = list.filter(function(n){ return (n.type||"qa") === state.currentType; });
+  }
+  var q = state.searchTerm.trim().toLowerCase();
+  if(q){
+    list = list.filter(function(n){
+      return n.question.toLowerCase().indexOf(q) > -1 ||
+             n.answer.toLowerCase().indexOf(q) > -1 ||
+             (n.tags||[]).some(function(t){ return t.toLowerCase().indexOf(q) > -1; });
+    });
+  }
+  list.sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
+  return list;
+}
+
+function filterTabHtml(key, label){
+  return '<button class="filterTab'+(state.currentType===key?' active':'')+'" data-type="'+key+'">'+label+'</button>';
+}
+function renderNotesView(){
+  var list = getFilteredNotes();
+  var catLabel = state.currentCategory === "__all__" ? "All notes" : state.currentCategory;
+  var html = "";
+  html += '<div class="contentHead">';
+  html += '<div><h1>'+esc(catLabel)+'</h1><div class="sub">'+list.length+' entr'+(list.length===1?'y':'ies')+(state.searchTerm ? ' · matching "'+esc(state.searchTerm)+'"' : '')+'</div></div>';
+  html += '<div class="headBtns">';
+  html += '<button class="btn ghost" id="btnReadCategory" '+(list.length===0?'disabled':'')+'>Read this list</button>';
+  html += '<button class="btn primary" id="btnAddNote">Add note</button>';
+  html += '</div></div>';
+
+  html += '<div class="filterTabs">'+
+    filterTabHtml("all","All")+filterTabHtml("qa","Q &amp; A")+filterTabHtml("theory","Theory notes")+
+  '</div>';
+
+  if(list.length === 0){
+    html += '<div class="emptyState"><h3>Nothing here yet</h3><p>'+(state.searchTerm ? "No notes match your search." : "Start building this section — add the first question and answer.")+'</p>'+
+      (state.searchTerm ? '' : '<button class="btn primary" id="btnAddNoteEmpty">Add note</button>') + '</div>';
+  } else {
+    html += '<div class="notesGrid">';
+    list.forEach(function(n){
+      html += '<article class="noteCard" data-id="'+n.id+'">'+
+        '<div class="noteCardHead">'+
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+
+            '<span class="catChip">'+esc(n.category)+'</span>'+
+            '<span class="typeChip'+((n.type==="theory")?' theory':'')+'">'+((n.type==="theory")?"Theory":"Q &amp; A")+'</span>'+
+          '</div>'+
+          '<div class="cardActions">'+
+            '<button class="iconBtn editBtn" title="Edit" aria-label="Edit note"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M13.5 3.5l3 3L6 17H3v-3L13.5 3.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>'+
+            '<button class="iconBtn dangerHover deleteBtn" title="Delete" aria-label="Delete note"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4.5h4V6M6 6l.8 10.5h6.4L14 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'+
+          '</div>'+
+        '</div>'+
+        '<p class="noteQuestion">'+esc(n.question)+'</p>'+
+        '<div class="noteAnswer">'+esc(n.answer)+'</div>'+
+        (n.tags && n.tags.length ? '<div class="tagRow">'+n.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>' : '')+
+        '<div class="noteMeta"><span>added '+formatDateShort(n.createdAt)+'</span><span>write '+formatDuration(n.writeSeconds)+'</span><span>read '+(n.readCount||0)+'&times;</span><span>'+formatDuration(n.readSeconds)+' spent reading</span></div>'+
+      '</article>';
+    });
+    html += '</div>';
+  }
+  els.main.innerHTML = html;
+  bindNotesViewEvents();
+}
+
+function bindNotesViewEvents(){
+  var addBtn = document.getElementById("btnAddNote");
+  var addBtnEmpty = document.getElementById("btnAddNoteEmpty");
+  var readBtn = document.getElementById("btnReadCategory");
+  if(addBtn) addBtn.addEventListener("click", function(){ openEditor(null); });
+  if(addBtnEmpty) addBtnEmpty.addEventListener("click", function(){ openEditor(null); });
+  if(readBtn) readBtn.addEventListener("click", function(){
+    var list = getFilteredNotes();
+    if(list.length) openReadingMode(list, 0, state.currentCategory === "__all__" ? "All notes" : state.currentCategory);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".filterTab"), function(btn){
+    btn.addEventListener("click", function(){
+      state.currentType = btn.getAttribute("data-type");
+      renderNotesView();
+    });
+  });
+
+  var grid = document.querySelector(".notesGrid");
+  if(!grid) return;
+  grid.addEventListener("click", function(e){
+    var card = e.target.closest(".noteCard");
+    if(!card) return;
+    var id = card.getAttribute("data-id");
+    if(e.target.closest(".editBtn")){
+      var n = state.notes.find(function(x){ return x.id === id; });
+      openEditor(n);
+      return;
+    }
+    if(e.target.closest(".deleteBtn")){
+      if(confirm("Delete this note? This can't be undone.")){
+        state.notes = state.notes.filter(function(x){ return x.id !== id; });
+        setShared("notes", state.notes);
+        render();
+      }
+      return;
+    }
+    card.classList.toggle("expanded");
+  });
+}
+
+/* ---------------- editor modal ---------------- */
+function populateCategorySelect(selected){
+  els.editCategorySelect.innerHTML = state.categories.map(function(c){
+    return '<option value="'+esc(c)+'" '+(c===selected?'selected':'')+'>'+esc(c)+'</option>';
+  }).join("");
+}
+function updateTypeToggleUI(){
+  var isTheory = state.editorType === "theory";
+  els.typeBtnQa.classList.toggle("active", !isTheory);
+  els.typeBtnTheory.classList.toggle("active", isTheory);
+  if(isTheory){
+    els.questionLabel.textContent = "Topic title";
+    els.editQuestion.placeholder = "e.g. The Merger of Tripura with India";
+    els.editQuestion.rows = 1;
+    els.answerLabel.textContent = "Notes";
+    els.editAnswer.placeholder = "Write everything you want to remember about this topic, in as much detail as you like";
+    els.editAnswer.rows = 11;
+  } else {
+    els.questionLabel.textContent = "Question";
+    els.editQuestion.placeholder = "e.g. Who founded the Manikya dynasty?";
+    els.editQuestion.rows = 2;
+    els.answerLabel.textContent = "Answer / notes";
+    els.editAnswer.placeholder = "Write the answer, in your own words";
+    els.editAnswer.rows = 6;
+  }
+}
+function openEditor(existingNote){
+  state.editingNoteId = existingNote ? existingNote.id : null;
+  state.editorOpenedAt = Date.now();
+  state.editorType = existingNote ? (existingNote.type || "qa") : "qa";
+  updateTypeToggleUI();
+  var defaultCat = state.currentCategory !== "__all__" ? state.currentCategory : state.categories[0];
+  populateCategorySelect(existingNote ? existingNote.category : defaultCat);
+  els.editQuestion.value = existingNote ? existingNote.question : "";
+  els.editAnswer.value = existingNote ? existingNote.answer : "";
+  els.editTags.value = existingNote && existingNote.tags ? existingNote.tags.join(", ") : "";
+  els.editorTitle.textContent = existingNote ? "Edit note" : "Add a note";
+  els.questionField.classList.remove("hasErr");
+  els.answerField.classList.remove("hasErr");
+
+  if(existingNote){
+    els.editorLedger.innerHTML =
+      '<span>added '+formatDateShort(existingNote.createdAt)+' by '+esc(existingNote.createdBy||"—")+'</span>'+
+      '<span>updated '+formatRelative(existingNote.updatedAt)+'</span>'+
+      '<span>read '+(existingNote.readCount||0)+'&times; · '+formatDuration(existingNote.readSeconds)+'</span>'+
+      '<span>writing time so far '+formatDuration(existingNote.writeSeconds)+'</span>';
+  } else {
+    els.editorLedger.innerHTML = "";
+  }
+  els.editorModal.classList.remove("hidden");
+  els.editQuestion.focus();
+}
+function closeEditor(){
+  els.editorModal.classList.add("hidden");
+  state.editingNoteId = null;
+  state.editorOpenedAt = null;
+}
+async function saveNoteHandler(){
+  var q = els.editQuestion.value.trim();
+  var a = els.editAnswer.value.trim();
+  var ok = true;
+  if(!q){ els.questionField.classList.add("hasErr"); ok = false; } else { els.questionField.classList.remove("hasErr"); }
+  if(!a){ els.answerField.classList.add("hasErr"); ok = false; } else { els.answerField.classList.remove("hasErr"); }
+  if(!ok) return;
+
+  var elapsed = clamp((Date.now() - state.editorOpenedAt) / 1000, 0, 3*3600);
+  var category = els.editCategorySelect.value;
+  var tags = els.editTags.value.split(",").map(function(t){ return t.trim(); }).filter(Boolean);
+  var who = state.profile && state.profile.name ? state.profile.name : "Unknown";
+  var isNew = !state.editingNoteId;
+
+  if(isNew){
+    state.notes.push({
+      id: uid(), category: category, type: state.editorType, question: q, answer: a, tags: tags,
+      createdAt: Date.now(), updatedAt: Date.now(), createdBy: who, updatedBy: who,
+      writeSeconds: elapsed, readSeconds: 0, readCount: 0
+    });
+  } else {
+    var n = state.notes.find(function(x){ return x.id === state.editingNoteId; });
+    if(n){
+      n.category = category; n.type = state.editorType; n.question = q; n.answer = a; n.tags = tags;
+      n.updatedAt = Date.now(); n.updatedBy = who;
+      n.writeSeconds = (n.writeSeconds||0) + elapsed;
+    }
+  }
+
+  ensureStatsUser(who);
+  state.stats[who].writingSeconds = (state.stats[who].writingSeconds||0) + elapsed;
+  if(isNew) state.stats[who].notesCreated = (state.stats[who].notesCreated||0) + 1;
+  state.stats[who].lastActive = Date.now();
+
+  await setShared("notes", state.notes);
+  await setShared("stats", state.stats);
+  closeEditor();
+  render();
+}
+function ensureStatsUser(who){
+  if(!state.stats[who]) state.stats[who] = {studySeconds:0, readingSeconds:0, writingSeconds:0, notesCreated:0, lastActive:Date.now()};
+}
+
+/* ---------------- categories ---------------- */
+async function addCategoryHandler(){
+  var val = els.newCatInput.value.trim();
+  if(!val) return;
+  if(state.categories.some(function(c){ return c.toLowerCase() === val.toLowerCase(); })){
+    els.newCatInput.value = "";
+    els.addCatForm.classList.remove("show");
+    state.currentCategory = state.categories.find(function(c){ return c.toLowerCase() === val.toLowerCase(); });
+    render();
+    return;
+  }
+  state.categories.push(val);
+  await setShared("categories", state.categories);
+  els.newCatInput.value = "";
+  els.addCatForm.classList.remove("show");
+  state.currentCategory = val;
+  render();
+}
+
+/* ---------------- stats view ---------------- */
+function renderStatsView(){
+  var totalNotes = state.notes.length;
+  var catCounts = {};
+  state.notes.forEach(function(n){ catCounts[n.category] = (catCounts[n.category]||0) + 1; });
+  var usedCats = Object.keys(catCounts).length;
+
+  var users = Object.keys(state.stats);
+  var combinedStudy = users.reduce(function(s,u){ return s + (state.stats[u].studySeconds||0); }, 0);
+  var myName = state.profile ? state.profile.name : null;
+  var myStudy = (myName && state.stats[myName]) ? state.stats[myName].studySeconds||0 : 0;
+
+  var html = '<div class="contentHead"><div><h1>Study time &amp; stats</h1><div class="sub">how this notebook is being used</div></div></div>';
+
+  html += '<div class="statsGrid">';
+  html += metricCard("Total notes", totalNotes);
+  html += metricCard("Categories in use", usedCats + " / " + state.categories.length);
+  html += metricCard("Combined study time", formatDuration(combinedStudy));
+  html += metricCard("Your study time", formatDuration(myStudy));
+  html += '</div>';
+
+  html += '<div class="statsSection"><h2>By person</h2>';
+  if(users.length === 0){
+    html += '<p style="color:var(--ink);font-size:13.5px;">No study sessions recorded yet.</p>';
+  } else {
+    var maxStudy = Math.max.apply(null, users.map(function(u){ return state.stats[u].studySeconds||0; })) || 1;
+    users.sort(function(a,b){ return (state.stats[b].studySeconds||0) - (state.stats[a].studySeconds||0); });
+    users.forEach(function(u){
+      var s = state.stats[u];
+      var pct = Math.round(((s.studySeconds||0) / maxStudy) * 100);
+      html += '<div class="userRow"><div class="uname">'+esc(u)+'</div><div class="barTrack"><div class="barFill" style="width:'+pct+'%"></div></div><div class="uval">'+formatDuration(s.studySeconds||0)+'</div></div>';
+    });
+    html += '<div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">';
+    users.forEach(function(u){
+      var s = state.stats[u];
+      html += '<div style="font-size:12px;color:var(--ink-faint);font-family:\'IBM Plex Mono\',monospace;">'+esc(u)+' — reading '+formatDuration(s.readingSeconds||0)+' · writing '+formatDuration(s.writingSeconds||0)+' · '+(s.notesCreated||0)+' notes added · last active '+formatRelative(s.lastActive)+'</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="statsSection"><h2>By category</h2>';
+  var catEntries = Object.keys(catCounts).map(function(c){ return [c, catCounts[c]]; }).sort(function(a,b){ return b[1]-a[1]; });
+  if(catEntries.length === 0){
+    html += '<p style="color:var(--ink);font-size:13.5px;">Add some notes to see the breakdown.</p>';
+  } else {
+    var maxCat = catEntries[0][1] || 1;
+    catEntries.forEach(function(pair){
+      var pct = Math.round((pair[1]/maxCat)*100);
+      html += '<div class="catBarRow"><div class="cname">'+esc(pair[0])+'</div><div class="barTrack"><div class="barFill" style="width:'+pct+'%"></div></div><div class="cval">'+pair[1]+'</div></div>';
+    });
+  }
+  html += '</div>';
+
+  var recent = state.notes.slice().sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); }).slice(0,6);
+  html += '<div class="statsSection"><h2>Recently added</h2><div class="recentList">';
+  if(recent.length === 0){
+    html += '<p style="color:var(--ink);font-size:13.5px;">Nothing added yet.</p>';
+  } else {
+    recent.forEach(function(n){
+      html += '<div class="recentRow"><span class="rq">'+esc(n.question)+'</span><span class="rmeta">'+esc(n.category)+' · '+formatRelative(n.createdAt)+'</span></div>';
+    });
+  }
+  html += '</div></div>';
+
+  els.main.innerHTML = html;
+}
+function metricCard(label, value){
+  return '<div class="metricCard"><div class="label">'+esc(label)+'</div><div class="value">'+esc(value)+'</div></div>';
+}
+
+/* ---------------- reading mode ---------------- */
+function openReadingMode(list, index, label){
+  state.reading = { list: list, index: index, label: label, noteStartedAt: Date.now(), revealed: false };
+  els.readingOverlay.classList.remove("hidden");
+  renderReadingCard();
+}
+function renderReadingCard(){
+  var r = state.reading;
+  var n = r.list[r.index];
+  var isTheory = (n.type === "theory");
+  els.readCategoryLabel.textContent = r.label;
+  els.readPosition.textContent = (r.index+1) + " / " + r.list.length;
+  els.readCat.textContent = n.category + (isTheory ? " · Theory" : "");
+  els.readQ.textContent = n.question;
+  els.readAns.textContent = n.answer;
+  els.readAns.classList.toggle("show", isTheory || r.revealed);
+  els.readRevealBtn.classList.toggle("hidden", isTheory);
+  els.readRevealBtn.textContent = r.revealed ? "Hide answer" : "Show answer";
+  els.readPrevBtn.disabled = r.index === 0;
+  els.readNextBtn.disabled = r.index === r.list.length - 1;
+}
+function flushReadingTime(){
+  var r = state.reading;
+  if(!r) return;
+  var elapsed = clamp((Date.now() - r.noteStartedAt)/1000, 0, 3600);
+  var n = r.list[r.index];
+  n.readSeconds = (n.readSeconds||0) + elapsed;
+  n.readCount = (n.readCount||0) + 1;
+  var who = state.profile && state.profile.name ? state.profile.name : "Unknown";
+  ensureStatsUser(who);
+  state.stats[who].readingSeconds = (state.stats[who].readingSeconds||0) + elapsed;
+  state.stats[who].lastActive = Date.now();
+}
+function readingNav(delta){
+  var r = state.reading;
+  var newIndex = r.index + delta;
+  if(newIndex < 0 || newIndex >= r.list.length) return;
+  flushReadingTime();
+  r.index = newIndex;
+  r.noteStartedAt = Date.now();
+  r.revealed = false;
+  renderReadingCard();
+}
+async function closeReadingMode(){
+  flushReadingTime();
+  await setShared("notes", state.notes);
+  await setShared("stats", state.stats);
+  state.reading = null;
+  els.readingOverlay.classList.add("hidden");
+  render();
+}
+
+/* ---------------- journal / reel ---------------- */
+function openJournal(){
+  var list = shuffle(state.notes);
+  var html = "";
+  if(list.length === 0){
+    html = '<div class="journalEmpty"><h3 style="font-family:\'Fraunces\',serif;font-size:22px;font-weight:500;">No notes to shuffle yet</h3><p>Add a few notes first, then come back to review them here.</p></div>';
+  } else {
+    list.forEach(function(n){
+      if(n.type === "theory"){
+        html += '<section class="journalCard" data-id="'+n.id+'">'+
+          '<div class="journalCat">'+esc(n.category)+' &middot; Theory</div>'+
+          '<div class="journalQ" style="font-size:clamp(20px,3vw,28px);margin-bottom:22px;">'+esc(n.question)+'</div>'+
+          '<div class="journalTheoryBody">'+esc(n.answer)+'</div>'+
+        '</section>';
+      } else {
+        html += '<section class="journalCard" data-id="'+n.id+'">'+
+          '<div class="journalCat">'+esc(n.category)+'</div>'+
+          '<div class="journalQ">'+esc(n.question)+'</div>'+
+          '<div class="journalHint">tap to reveal the answer</div>'+
+          '<div class="journalAnsWrap"><div class="journalAnsInner">'+
+            '<div class="journalCat">'+esc(n.category)+'</div>'+
+            '<div class="journalQ">'+esc(n.question)+'</div>'+
+            '<div class="journalA">'+esc(n.answer)+'</div>'+
+          '</div></div>'+
+        '</section>';
+      }
+    });
+  }
+  els.journalScroll.innerHTML = html;
+  els.journalScroll.scrollTop = 0;
+  els.journalOverlay.classList.remove("hidden");
+}
+function closeJournal(){
+  els.journalOverlay.classList.add("hidden");
+}
+
+/* ---------------- profile modal ---------------- */
+function openProfileModal(editMode){
+  state.profileEditMode = editMode;
+  if(editMode){
+    els.profileModalTitle.textContent = "Your name";
+    els.profileIntro.textContent = "This only changes what your future notes and study time are tracked under.";
+    els.profileNameInput.value = state.profile ? state.profile.name : "";
+    els.cancelProfileBtn.classList.remove("hidden");
+  } else {
+    els.profileModalTitle.textContent = "Who's studying?";
+    els.profileIntro.textContent = "This notebook is shared between you and one friend. Enter a name so your notes and study time are tracked separately.";
+    els.profileNameInput.value = "";
+    els.cancelProfileBtn.classList.add("hidden");
+  }
+  els.profileModal.classList.remove("hidden");
+  els.profileNameInput.focus();
+}
+async function saveProfileHandler(){
+  var name = els.profileNameInput.value.trim();
+  var field = els.profileNameInput.closest(".field");
+  if(!name){ field.classList.add("hasErr"); return; }
+  field.classList.remove("hasErr");
+  state.profile = { name: name };
+  await setPersonal("profile", state.profile);
+  applyProfileToHeader();
+  els.profileModal.classList.add("hidden");
+  render();
+}
+
+/* ---------------- export / import backup ---------------- */
+function exportData(){
+  var payload = {
+    app: "rajmala-archive",
+    version: 1,
+    exportedAt: Date.now(),
+    categories: state.categories,
+    notes: state.notes,
+    stats: state.stats
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  var stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = "rajmala-archive-backup-" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function handleImportFile(e){
+  var file = e.target.files && e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    var data;
+    try{ data = JSON.parse(reader.result); }catch(err){
+      alert("That file doesn't look like a valid backup (not readable JSON).");
+      els.importFileInput.value = "";
+      return;
+    }
+    if(!data || !Array.isArray(data.notes)){
+      alert("That file doesn't look like a Rajmala Archive backup.");
+      els.importFileInput.value = "";
+      return;
+    }
+    state.pendingImportData = data;
+    var catCount = Array.isArray(data.categories) ? data.categories.length : 0;
+    var fromDate = data.exportedAt ? formatDateShort(data.exportedAt) : "an unknown date";
+    els.importSummary.textContent = data.notes.length + " notes and " + catCount + " categories, exported " + fromDate + ".";
+    els.importModal.classList.remove("hidden");
+    els.importFileInput.value = "";
+  };
+  reader.readAsText(file);
+}
+async function finishImport(){
+  await setShared("categories", state.categories);
+  await setShared("notes", state.notes);
+  await setShared("stats", state.stats);
+  state.pendingImportData = null;
+  els.importModal.classList.add("hidden");
+  state.currentCategory = "__all__";
+  state.currentView = "notes";
+  render();
+}
+function mergeImportHandler(){
+  var data = state.pendingImportData;
+  if(!data) return;
+  (data.categories||[]).forEach(function(c){
+    if(!state.categories.some(function(x){ return x.toLowerCase() === String(c).toLowerCase(); })) state.categories.push(c);
+  });
+  var existingIds = {};
+  state.notes.forEach(function(n){ existingIds[n.id] = true; });
+  (data.notes||[]).forEach(function(n){ if(!existingIds[n.id]) state.notes.push(n); });
+  var importedStats = data.stats || {};
+  Object.keys(importedStats).forEach(function(u){
+    if(!state.stats[u]) state.stats[u] = importedStats[u];
+  });
+  finishImport();
+}
+function replaceImportHandler(){
+  var data = state.pendingImportData;
+  if(!data) return;
+  if(!confirm("This replaces everything currently in the notebook with the file's contents. Continue?")) return;
+  state.categories = (data.categories && data.categories.length) ? data.categories : DEFAULT_CATEGORIES.slice();
+  state.notes = data.notes || [];
+  state.stats = data.stats || {};
+  finishImport();
+}
+
+/* ---------------- render dispatch ---------------- */
+function render(){
+  renderSidebar();
+  if(state.currentView === "stats") renderStatsView();
+  else renderNotesView();
+}
+
+/* ---------------- mobile sidebar ---------------- */
+function openMobileSidebar(){
+  els.sidebar.classList.add("open");
+  els.backdrop.classList.add("show");
+}
+function closeMobileSidebar(){
+  if(window.innerWidth > 860) return;
+  els.sidebar.classList.remove("open");
+  els.backdrop.classList.remove("show");
+}
+
+/* ---------------- heartbeat / study timer ---------------- */
+var heartbeat = { lastTick: Date.now(), accum: 0 };
+function startHeartbeat(){
+  heartbeat.lastTick = Date.now();
+  setInterval(function(){
+    if(document.visibilityState === "visible"){
+      var now = Date.now();
+      var delta = clamp((now - heartbeat.lastTick)/1000, 0, 30);
+      heartbeat.accum += delta;
+      heartbeat.lastTick = now;
+      state.sessionSeconds += delta;
+      els.sessionTimeVal.textContent = formatDuration(state.sessionSeconds);
+      if(heartbeat.accum >= 20){
+        flushStudyTime(heartbeat.accum);
+        heartbeat.accum = 0;
+      }
+    } else {
+      heartbeat.lastTick = Date.now();
+    }
+  }, 4000);
+  document.addEventListener("visibilitychange", function(){ heartbeat.lastTick = Date.now(); });
+}
+async function flushStudyTime(sec){
+  var who = state.profile && state.profile.name ? state.profile.name : null;
+  if(!who) return;
+  ensureStatsUser(who);
+  state.stats[who].studySeconds = (state.stats[who].studySeconds||0) + sec;
+  state.stats[who].lastActive = Date.now();
+  await setShared("stats", state.stats);
+}
+
+/* ---------------- static events ---------------- */
+function bindStaticEvents(){
+  els.hamburger.addEventListener("click", openMobileSidebar);
+  els.backdrop.addEventListener("click", closeMobileSidebar);
+
+  els.searchInput.addEventListener("input", function(){
+    state.searchTerm = els.searchInput.value;
+    if(state.currentView === "notes") renderNotesView();
+  });
+
+  els.cancelEditBtn.addEventListener("click", closeEditor);
+  els.saveNoteBtn.addEventListener("click", saveNoteHandler);
+  els.typeBtnQa.addEventListener("click", function(){ state.editorType = "qa"; updateTypeToggleUI(); });
+  els.typeBtnTheory.addEventListener("click", function(){ state.editorType = "theory"; updateTypeToggleUI(); });
+
+  els.exportBtn.addEventListener("click", function(){ exportData(); closeMobileSidebar(); });
+  els.importBtn.addEventListener("click", function(){ els.importFileInput.click(); });
+  els.importFileInput.addEventListener("change", handleImportFile);
+  els.cancelImportBtn.addEventListener("click", function(){ state.pendingImportData = null; els.importModal.classList.add("hidden"); });
+  els.mergeImportBtn.addEventListener("click", mergeImportHandler);
+  els.replaceImportBtn.addEventListener("click", replaceImportHandler);
+
+  els.showAddCatBtn.addEventListener("click", function(){
+    els.addCatForm.classList.toggle("show");
+    if(els.addCatForm.classList.contains("show")) els.newCatInput.focus();
+  });
+  els.confirmAddCat.addEventListener("click", addCategoryHandler);
+  els.newCatInput.addEventListener("keydown", function(e){ if(e.key === "Enter") addCategoryHandler(); });
+
+  els.journalNavBtn.addEventListener("click", function(){ closeMobileSidebar(); openJournal(); });
+  els.statsNavBtn.addEventListener("click", function(){ state.currentView = "stats"; closeMobileSidebar(); render(); });
+
+  els.profileGear.addEventListener("click", function(){ openProfileModal(true); });
+  els.saveProfileBtn.addEventListener("click", saveProfileHandler);
+  els.cancelProfileBtn.addEventListener("click", function(){ els.profileModal.classList.add("hidden"); });
+  els.profileNameInput.addEventListener("keydown", function(e){ if(e.key === "Enter") saveProfileHandler(); });
+
+  els.closeReadingBtn.addEventListener("click", closeReadingMode);
+  els.readPrevBtn.addEventListener("click", function(){ readingNav(-1); });
+  els.readNextBtn.addEventListener("click", function(){ readingNav(1); });
+  els.readRevealBtn.addEventListener("click", function(){
+    state.reading.revealed = !state.reading.revealed;
+    renderReadingCard();
+  });
+  document.addEventListener("keydown", function(e){
+    if(!els.readingOverlay.classList.contains("hidden")){
+      if(e.key === "ArrowLeft") readingNav(-1);
+      if(e.key === "ArrowRight") readingNav(1);
+      if(e.key === "Escape") closeReadingMode();
+      if(e.key === " "){ e.preventDefault(); state.reading.revealed = !state.reading.revealed; renderReadingCard(); }
+    }
+    if(!els.journalOverlay.classList.contains("hidden") && e.key === "Escape") closeJournal();
+  });
+
+  els.closeJournalBtn.addEventListener("click", closeJournal);
+  els.journalShuffleBtn.addEventListener("click", openJournal);
+  els.journalScroll.addEventListener("click", function(e){
+    var card = e.target.closest(".journalCard");
+    if(!card) return;
+    card.classList.toggle("revealed");
+  });
+
+  document.querySelectorAll(".modalBackdrop").forEach(function(mb){
+    mb.addEventListener("click", function(e){
+      if(e.target === mb){
+        if(mb === els.editorModal) closeEditor();
+        if(mb === els.profileModal && state.profileEditMode) mb.classList.add("hidden");
+        if(mb === els.importModal){ state.pendingImportData = null; mb.classList.add("hidden"); }
+      }
+    });
+  });
+}
+
+init();
+})();
+</script>
+</body>
+</html>
