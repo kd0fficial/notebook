@@ -371,6 +371,7 @@ a{color:var(--bronze-light);}
       </div>
     </div>
     <div class="topbarRight">
+      <div class="sessionTime" id="syncStatus" title="Connection to shared storage"><span class="dot" id="syncDot"></span><span id="syncStatusVal">connecting…</span></div>
       <div class="sessionTime" id="sessionTime" title="Time spent studying this visit"><span class="dot"></span><span id="sessionTimeVal">0m</span></div>
       <div class="userBadge">
         <div class="initial" id="userInitial">?</div>
@@ -541,6 +542,8 @@ a{color:var(--bronze-light);}
   <div class="journalScroll" id="journalScroll"></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 (function(){
 "use strict";
@@ -551,35 +554,86 @@ var DEFAULT_CATEGORIES = [
   "National Parks & Wildlife","Art & Culture","Festivals","Official Language","Administration"
 ];
 
-var hasStorage = (typeof window.storage !== "undefined");
+/* ---------------- Firebase (shared data) ---------------- */
+var firebaseConfig = {
+  apiKey: "AIzaSyDmoeUgxwfhTALzI2-3P0hQsaQrM8FHKF0",
+  authDomain: "community-of-food-corner.firebaseapp.com",
+  databaseURL: "https://community-of-food-corner-default-rtdb.firebaseio.com",
+  projectId: "community-of-food-corner",
+  storageBucket: "community-of-food-corner.appspot.com",
+  messagingSenderId: "929369283723",
+  appId: "1:929369283723:web:ea3d7a1b4cff4f1f90488e"
+};
 
-function memGet(){ return null; }
-var memStore = {};
+var db = null;
+var fbReady = false;
+try{
+  if(typeof firebase !== "undefined"){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    fbReady = true;
+  }
+}catch(e){ console.error("Firebase failed to initialize", e); }
 
-async function getShared(key, fallback){
-  if(!hasStorage){ return (key in memStore) ? memStore[key] : fallback; }
+var ROOT = "notebook"; // everything shared between you and your friend lives under this node
+
+/* Study-time tracking (readSeconds/writeSeconds/readCount on notes, and all of /stats)
+   is kept local to this browser session only and is never written to Firebase — it's
+   fine for it to reset on refresh, so it doesn't bloat the shared database. */
+function cleanNoteForSync(note){
+  var clean = {};
+  Object.keys(note).forEach(function(k){
+    if(k === "readSeconds" || k === "writeSeconds" || k === "readCount") return;
+    clean[k] = note[k];
+  });
+  return clean;
+}
+function notesArrayToObj(arr){
+  var o = {};
+  (arr||[]).forEach(function(n){ o[n.id] = cleanNoteForSync(n); });
+  return o;
+}
+function notesObjToArray(obj){
+  if(!obj) return [];
+  return Object.keys(obj).map(function(k){ return obj[k]; });
+}
+
+async function fbOnce(path, fallback){
+  if(!fbReady) return fallback;
   try{
-    var r = await window.storage.get(key, true);
-    return r ? JSON.parse(r.value) : fallback;
-  }catch(e){ return fallback; }
+    var snap = await db.ref(path).once("value");
+    var val = snap.val();
+    return (val === null || val === undefined) ? fallback : val;
+  }catch(e){ console.error("firebase read failed", path, e); return fallback; }
 }
-async function setShared(key, val){
-  memStore[key] = val;
-  if(!hasStorage) return;
-  try{ await window.storage.set(key, JSON.stringify(val), true); }catch(e){ console.error("storage set failed", key, e); }
+async function fbSetNote(note){
+  if(!fbReady) return;
+  try{ await db.ref(ROOT + "/notes/" + note.id).set(cleanNoteForSync(note)); }catch(e){ console.error("firebase note save failed", e); }
 }
+async function fbDeleteNote(id){
+  if(!fbReady) return;
+  try{ await db.ref(ROOT + "/notes/" + id).remove(); }catch(e){ console.error("firebase note delete failed", e); }
+}
+async function fbSetAllNotes(arr){
+  if(!fbReady) return;
+  try{ await db.ref(ROOT + "/notes").set(notesArrayToObj(arr)); }catch(e){ console.error("firebase notes bulk save failed", e); }
+}
+async function fbSetCategories(arr){
+  if(!fbReady) return;
+  try{ await db.ref(ROOT + "/categories").set(arr); }catch(e){ console.error("firebase categories save failed", e); }
+}
+
+/* profile (which name this browser is) is device-local, not shared */
 async function getPersonal(key, fallback){
-  if(!hasStorage){ return (key in memStore) ? memStore[key] : fallback; }
   try{
-    var r = await window.storage.get(key, false);
-    return r ? JSON.parse(r.value) : fallback;
+    var raw = localStorage.getItem("rajmala_" + key);
+    return raw !== null ? JSON.parse(raw) : fallback;
   }catch(e){ return fallback; }
 }
 async function setPersonal(key, val){
-  memStore[key] = val;
-  if(!hasStorage) return;
-  try{ await window.storage.set(key, JSON.stringify(val), false); }catch(e){ console.error("storage set failed", key, e); }
+  try{ localStorage.setItem("rajmala_" + key, JSON.stringify(val)); }catch(e){ console.error("local save failed", key, e); }
 }
+
 
 function esc(s){
   return (s == null ? "" : String(s)).replace(/[&<>"']/g, function(c){
@@ -659,18 +713,66 @@ function cacheEls(){
    "readPrevBtn","readNextBtn","readRevealBtn","closeReadingBtn",
    "journalOverlay","journalScroll","closeJournalBtn","journalShuffleBtn",
    "showAddCatBtn","addCatForm","newCatInput","confirmAddCat",
-   "journalNavBtn","statsNavBtn","sessionTimeVal"
+   "journalNavBtn","statsNavBtn","sessionTimeVal","syncStatusVal","syncDot"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 }
 
 /* ---------------- init ---------------- */
+var appStarted = false;
+
+function watchSyncStatus(){
+  if(!fbReady){
+    els.syncStatusVal.textContent = "offline (local only)";
+    els.syncDot.style.background = "var(--red)";
+    return;
+  }
+  db.ref(".info/connected").on("value", function(snap){
+    if(snap.val() === true){
+      els.syncStatusVal.textContent = "synced";
+      els.syncDot.style.background = "var(--verdigris)";
+    } else {
+      els.syncStatusVal.textContent = "connecting…";
+      els.syncDot.style.background = "var(--bronze)";
+    }
+  });
+}
+
+function attachLiveSync(){
+  if(!fbReady) return;
+  db.ref(ROOT + "/categories").on("value", function(snap){
+    var val = snap.val();
+    if(val && val.length) state.categories = val;
+    if(appStarted) render();
+  });
+  db.ref(ROOT + "/notes").on("value", function(snap){
+    var incoming = notesObjToArray(snap.val());
+    /* keep this session's local read/write tracking on notes we already know about,
+       since those fields are never sent to or stored in Firebase */
+    incoming.forEach(function(n){
+      var existing = state.notes.find(function(x){ return x.id === n.id; });
+      if(existing){
+        n.readSeconds = existing.readSeconds || 0;
+        n.writeSeconds = existing.writeSeconds || 0;
+        n.readCount = existing.readCount || 0;
+      }
+    });
+    state.notes = incoming;
+    if(appStarted) render();
+  });
+}
+
 async function init(){
   cacheEls();
   bindStaticEvents();
-  state.categories = await getShared("categories", DEFAULT_CATEGORIES.slice());
-  state.notes = await getShared("notes", []);
-  state.stats = await getShared("stats", {});
+  watchSyncStatus();
+
+  state.categories = await fbOnce(ROOT + "/categories", DEFAULT_CATEGORIES.slice());
+  if(!state.categories || !state.categories.length) state.categories = DEFAULT_CATEGORIES.slice();
+  state.notes = notesObjToArray(await fbOnce(ROOT + "/notes", {}));
+  state.stats = {};
   state.profile = await getPersonal("profile", null);
+
+  attachLiveSync();
 
   if(!state.profile || !state.profile.name){
     openProfileModal(false);
@@ -678,6 +780,7 @@ async function init(){
     applyProfileToHeader();
   }
   render();
+  appStarted = true;
   startHeartbeat();
 }
 
@@ -816,7 +919,7 @@ function bindNotesViewEvents(){
     if(e.target.closest(".deleteBtn")){
       if(confirm("Delete this note? This can't be undone.")){
         state.notes = state.notes.filter(function(x){ return x.id !== id; });
-        setShared("notes", state.notes);
+        fbDeleteNote(id);
         render();
       }
       return;
@@ -896,18 +999,21 @@ async function saveNoteHandler(){
   var who = state.profile && state.profile.name ? state.profile.name : "Unknown";
   var isNew = !state.editingNoteId;
 
+  var savedNote;
   if(isNew){
-    state.notes.push({
+    savedNote = {
       id: uid(), category: category, type: state.editorType, question: q, answer: a, tags: tags,
       createdAt: Date.now(), updatedAt: Date.now(), createdBy: who, updatedBy: who,
       writeSeconds: elapsed, readSeconds: 0, readCount: 0
-    });
+    };
+    state.notes.push(savedNote);
   } else {
     var n = state.notes.find(function(x){ return x.id === state.editingNoteId; });
     if(n){
       n.category = category; n.type = state.editorType; n.question = q; n.answer = a; n.tags = tags;
       n.updatedAt = Date.now(); n.updatedBy = who;
       n.writeSeconds = (n.writeSeconds||0) + elapsed;
+      savedNote = n;
     }
   }
 
@@ -916,8 +1022,7 @@ async function saveNoteHandler(){
   if(isNew) state.stats[who].notesCreated = (state.stats[who].notesCreated||0) + 1;
   state.stats[who].lastActive = Date.now();
 
-  await setShared("notes", state.notes);
-  await setShared("stats", state.stats);
+  if(savedNote) await fbSetNote(savedNote);
   closeEditor();
   render();
 }
@@ -937,7 +1042,7 @@ async function addCategoryHandler(){
     return;
   }
   state.categories.push(val);
-  await setShared("categories", state.categories);
+  await fbSetCategories(state.categories);
   els.newCatInput.value = "";
   els.addCatForm.classList.remove("show");
   state.currentCategory = val;
@@ -1060,8 +1165,6 @@ function readingNav(delta){
 }
 async function closeReadingMode(){
   flushReadingTime();
-  await setShared("notes", state.notes);
-  await setShared("stats", state.stats);
   state.reading = null;
   els.readingOverlay.classList.add("hidden");
   render();
@@ -1179,9 +1282,8 @@ function handleImportFile(e){
   reader.readAsText(file);
 }
 async function finishImport(){
-  await setShared("categories", state.categories);
-  await setShared("notes", state.notes);
-  await setShared("stats", state.stats);
+  await fbSetCategories(state.categories);
+  await fbSetAllNotes(state.notes);
   state.pendingImportData = null;
   els.importModal.classList.add("hidden");
   state.currentCategory = "__all__";
@@ -1253,13 +1355,12 @@ function startHeartbeat(){
   }, 4000);
   document.addEventListener("visibilitychange", function(){ heartbeat.lastTick = Date.now(); });
 }
-async function flushStudyTime(sec){
+function flushStudyTime(sec){
   var who = state.profile && state.profile.name ? state.profile.name : null;
   if(!who) return;
   ensureStatsUser(who);
   state.stats[who].studySeconds = (state.stats[who].studySeconds||0) + sec;
   state.stats[who].lastActive = Date.now();
-  await setShared("stats", state.stats);
 }
 
 /* ---------------- static events ---------------- */
