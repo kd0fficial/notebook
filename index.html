@@ -243,6 +243,44 @@ a{color:var(--bronze-light);}
 .dataBtn:hover{color:var(--bronze-light);border-color:var(--bronze-dim);}
 .journalTheoryBody{max-width:680px;font-size:16px;line-height:1.75;color:var(--bone-dim);white-space:pre-wrap;max-height:58vh;overflow-y:auto;padding-right:8px;text-align:left;}
 
+/* ---------- Rich text toolbar & editable fields ---------- */
+.richToolbar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;margin-bottom:6px;padding:4px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);}
+.toolbarBtn{
+  background:none;border:none;color:var(--bone-dim);width:28px;height:28px;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;
+}
+.toolbarBtn:hover{background:var(--raised);color:var(--bone);}
+.toolbarBtn.bcmd{font-weight:700;}
+.toolbarBtn.icmd{font-style:italic;}
+.toolbarBtn.ucmd{text-decoration:underline;}
+.toolbarDivider{width:1px;align-self:stretch;background:var(--border);margin:0 4px;flex:none;}
+.colorPopWrap{position:relative;flex:none;}
+.colorPop{
+  display:none;position:absolute;top:32px;left:0;z-index:20;background:var(--raised);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:8px;gap:6px;flex-wrap:wrap;width:150px;box-shadow:0 8px 20px rgba(0,0,0,.4);
+}
+.colorPop.show{display:flex;}
+.swatchBtn{width:22px;height:22px;border-radius:5px;border:1px solid var(--border);flex:none;position:relative;}
+.swatchBtn:hover{border-color:var(--bone-dim);}
+.swatchBtn.noneSwatch{display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:13px;background:var(--surface2);}
+.richEditable{
+  width:100%;min-height:44px;max-height:340px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--bone);padding:9px 11px;font-size:14px;line-height:1.6;
+}
+.richEditable:focus{outline:none;border-color:var(--bronze-dim);}
+.richEditable.isEmpty::before{content:attr(data-placeholder);color:var(--ink-faint);pointer-events:none;}
+.field.hasErr .richEditable{border-color:var(--red);}
+
+/* typography for rendered rich content, wherever notes are displayed */
+.richContent a{color:var(--bronze-light);text-decoration:underline;text-underline-offset:2px;}
+.richContent h3{font-family:'Fraunces',serif;font-size:1.18em;font-weight:600;color:var(--bone);margin:14px 0 6px;line-height:1.35;}
+.richContent h3:first-child{margin-top:0;}
+.richContent ul,.richContent ol{margin:8px 0;padding-left:22px;}
+.richContent li{margin-bottom:4px;}
+.richContent p,.richContent div{margin:0 0 8px;}
+.richContent p:last-child,.richContent div:last-child{margin-bottom:0;}
+
+
 /* ---------- Modal (editor / profile) ---------- */
 .modalBackdrop{
   position:fixed;inset:0;background:rgba(10,9,7,.6);display:flex;align-items:center;justify-content:center;
@@ -448,12 +486,86 @@ a{color:var(--bronze-light);}
     </div>
     <div class="field" id="questionField">
       <label for="editQuestion" id="questionLabel">Question</label>
-      <textarea id="editQuestion" rows="2" placeholder="e.g. Who founded the Manikya dynasty?"></textarea>
+      <div class="richToolbar" data-target="editQuestion">
+        <button type="button" class="toolbarBtn bcmd" data-cmd="bold" title="Bold">B</button>
+        <button type="button" class="toolbarBtn icmd" data-cmd="italic" title="Italic">I</button>
+        <button type="button" class="toolbarBtn ucmd" data-cmd="underline" title="Underline">U</button>
+        <span class="toolbarDivider"></span>
+        <button type="button" class="toolbarBtn" data-cmd="formatBlock" title="Sub-heading">H</button>
+        <button type="button" class="toolbarBtn" data-cmd="insertUnorderedList" title="Bullet list">&bull;</button>
+        <button type="button" class="toolbarBtn" data-cmd="insertOrderedList" title="Numbered list">1.</button>
+        <span class="toolbarDivider"></span>
+        <div class="colorPopWrap">
+          <button type="button" class="toolbarBtn colorTrigger" data-pop="color" title="Text color">A</button>
+          <div class="colorPop" data-popbody="color">
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#EDE6D9" style="background:#EDE6D9" title="Default"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#D8AE7C" style="background:#D8AE7C" title="Bronze"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#8FAC9B" style="background:#8FAC9B" title="Verdigris"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#C97268" style="background:#C97268" title="Red"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#84A3D6" style="background:#84A3D6" title="Blue"></button>
+          </div>
+        </div>
+        <div class="colorPopWrap">
+          <button type="button" class="toolbarBtn colorTrigger" data-pop="highlight" title="Highlight">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 14l3 3 9-9-3-3-9 9zM3 17l1-3 2 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="colorPop" data-popbody="highlight">
+            <button type="button" class="swatchBtn noneSwatch" data-cmd="hiliteColor" data-val="transparent" title="No highlight">&times;</button>
+            <button type="button" class="swatchBtn" data-cmd="hiliteColor" data-val="rgba(184,137,79,.35)" style="background:rgba(184,137,79,.35)" title="Amber"></button>
+            <button type="button" class="swatchBtn" data-cmd="hiliteColor" data-val="rgba(110,139,122,.35)" style="background:rgba(110,139,122,.35)" title="Verdigris"></button>
+            <button type="button" class="swatchBtn" data-cmd="hiliteColor" data-val="rgba(156,74,66,.35)" style="background:rgba(156,74,66,.35)" title="Red"></button>
+          </div>
+        </div>
+        <button type="button" class="toolbarBtn" data-cmd="createLink" title="Add link">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M8 12l4-4M7 14l-1.5 1.5a3 3 0 01-4.24-4.24L3 9.5M13 6l1.5-1.5a3 3 0 014.24 4.24L17 10.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="toolbarBtn" data-cmd="removeFormat" title="Clear formatting">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M5 5h6l4 4M9 5L6 15h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="richEditable" id="editQuestion" contenteditable="true" data-placeholder="e.g. Who founded the Manikya dynasty?"></div>
       <div class="err" id="questionErr">Add a question before saving.</div>
     </div>
     <div class="field" id="answerField">
       <label for="editAnswer" id="answerLabel">Answer / notes</label>
-      <textarea id="editAnswer" rows="6" placeholder="Write the answer, in your own words"></textarea>
+      <div class="richToolbar" data-target="editAnswer">
+        <button type="button" class="toolbarBtn bcmd" data-cmd="bold" title="Bold">B</button>
+        <button type="button" class="toolbarBtn icmd" data-cmd="italic" title="Italic">I</button>
+        <button type="button" class="toolbarBtn ucmd" data-cmd="underline" title="Underline">U</button>
+        <span class="toolbarDivider"></span>
+        <button type="button" class="toolbarBtn" data-cmd="formatBlock" title="Sub-heading">H</button>
+        <button type="button" class="toolbarBtn" data-cmd="insertUnorderedList" title="Bullet list">&bull;</button>
+        <button type="button" class="toolbarBtn" data-cmd="insertOrderedList" title="Numbered list">1.</button>
+        <span class="toolbarDivider"></span>
+        <div class="colorPopWrap">
+          <button type="button" class="toolbarBtn colorTrigger" data-pop="color" title="Text color">A</button>
+          <div class="colorPop" data-popbody="color">
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#EDE6D9" style="background:#EDE6D9" title="Default"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#D8AE7C" style="background:#D8AE7C" title="Bronze"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#8FAC9B" style="background:#8FAC9B" title="Verdigris"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#C97268" style="background:#C97268" title="Red"></button>
+            <button type="button" class="swatchBtn" data-cmd="foreColor" data-val="#84A3D6" style="background:#84A3D6" title="Blue"></button>
+          </div>
+        </div>
+        <div class="colorPopWrap">
+          <button type="button" class="toolbarBtn colorTrigger" data-pop="highlight" title="Highlight">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 14l3 3 9-9-3-3-9 9zM3 17l1-3 2 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="colorPop" data-popbody="highlight">
+            <button type="button" class="swatchBtn noneSwatch" data-cmd="hiliteColor" data-val="transparent" title="No highlight">&times;</button>
+            <button type="button" class="swatchBtn" data-cmd="hiliteColor" data-val="rgba(184,137,79,.35)" style="background:rgba(184,137,79,.35)" title="Amber"></button>
+            <button type="button" class="swatchBtn" data-cmd="hiliteColor" data-val="rgba(110,139,122,.35)" style="background:rgba(110,139,122,.35)" title="Verdigris"></button>
+            <button type="button" class="swatchBtn" data-cmd="hiliteColor" data-val="rgba(156,74,66,.35)" style="background:rgba(156,74,66,.35)" title="Red"></button>
+          </div>
+        </div>
+        <button type="button" class="toolbarBtn" data-cmd="createLink" title="Add link">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M8 12l4-4M7 14l-1.5 1.5a3 3 0 01-4.24-4.24L3 9.5M13 6l1.5-1.5a3 3 0 014.24 4.24L17 10.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="toolbarBtn" data-cmd="removeFormat" title="Clear formatting">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M5 5h6l4 4M9 5L6 15h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="richEditable" id="editAnswer" contenteditable="true" data-placeholder="Write the answer, in your own words" style="min-height:130px;"></div>
       <div class="err" id="answerErr">Add an answer before saving.</div>
     </div>
     <div class="field">
@@ -514,8 +626,8 @@ a{color:var(--bronze-light);}
   <div class="readBody">
     <div class="readCardInner">
       <div class="readCat" id="readCat"></div>
-      <div class="readQ" id="readQ"></div>
-      <div class="readAns" id="readAns"></div>
+      <div class="readQ richContent" id="readQ"></div>
+      <div class="readAns richContent" id="readAns"></div>
     </div>
   </div>
   <div class="readFoot">
@@ -642,6 +754,51 @@ function esc(s){
 }
 function uid(){ return "n" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+/* ---------------- rich text: sanitize & plain-text extraction ---------------- */
+var RICH_ALLOWED_TAGS = {B:1,STRONG:1,I:1,EM:1,U:1,SPAN:1,FONT:1,A:1,BR:1,DIV:1,P:1,UL:1,OL:1,LI:1,H3:1,H4:1};
+function sanitizeRichNode(sourceNode){
+  if(sourceNode.nodeType === 3){ return [document.createTextNode(sourceNode.nodeValue)]; }
+  if(sourceNode.nodeType !== 1){ return []; }
+  var tag = sourceNode.tagName;
+  var kids = [];
+  Array.prototype.forEach.call(sourceNode.childNodes, function(c){
+    kids = kids.concat(sanitizeRichNode(c));
+  });
+  if(!RICH_ALLOWED_TAGS[tag]) return kids; // unwrap disallowed tags, keep their sanitized contents
+  var clean = document.createElement(tag === "FONT" ? "SPAN" : tag);
+  if(tag === "A"){
+    var href = (sourceNode.getAttribute("href") || "").trim();
+    if(/^(https?:|mailto:)/i.test(href)) clean.setAttribute("href", href);
+    else clean.removeAttribute("href");
+    clean.setAttribute("target", "_blank");
+    clean.setAttribute("rel", "noopener noreferrer");
+  }
+  var color = (sourceNode.style && sourceNode.style.color) || sourceNode.getAttribute("color") || "";
+  var bg = (sourceNode.style && sourceNode.style.backgroundColor) || "";
+  if(color) clean.style.color = color;
+  if(bg) clean.style.backgroundColor = bg;
+  kids.forEach(function(k){ clean.appendChild(k); });
+  return [clean];
+}
+function sanitizeHtml(html){
+  var container = document.createElement("div");
+  container.innerHTML = html || "";
+  var out = document.createElement("div");
+  Array.prototype.forEach.call(container.childNodes, function(c){
+    sanitizeRichNode(c).forEach(function(n){ out.appendChild(n); });
+  });
+  return out.innerHTML;
+}
+function safeHtml(html){ return sanitizeHtml(html || ""); }
+function stripHtml(html){
+  var d = document.createElement("div");
+  d.innerHTML = html || "";
+  return d.textContent || "";
+}
+function looksLikeHtml(str){ return /<[a-z][\s\S]*>/i.test(str || ""); }
+function plainToRichHtml(str){ return esc(str || "").replace(/\n/g, "<br>"); }
+
 function initials(name){
   var parts = String(name||"").trim().split(/\s+/).filter(Boolean);
   if(parts.length === 0) return "?";
@@ -831,8 +988,8 @@ function getFilteredNotes(){
   var q = state.searchTerm.trim().toLowerCase();
   if(q){
     list = list.filter(function(n){
-      return n.question.toLowerCase().indexOf(q) > -1 ||
-             n.answer.toLowerCase().indexOf(q) > -1 ||
+      return stripHtml(n.question).toLowerCase().indexOf(q) > -1 ||
+             stripHtml(n.answer).toLowerCase().indexOf(q) > -1 ||
              (n.tags||[]).some(function(t){ return t.toLowerCase().indexOf(q) > -1; });
     });
   }
@@ -875,8 +1032,8 @@ function renderNotesView(){
             '<button class="iconBtn dangerHover deleteBtn" title="Delete" aria-label="Delete note"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4.5h4V6M6 6l.8 10.5h6.4L14 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'+
           '</div>'+
         '</div>'+
-        '<p class="noteQuestion">'+esc(n.question)+'</p>'+
-        '<div class="noteAnswer">'+esc(n.answer)+'</div>'+
+        '<p class="noteQuestion richContent">'+safeHtml(n.question)+'</p>'+
+        '<div class="noteAnswer richContent">'+safeHtml(n.answer)+'</div>'+
         (n.tags && n.tags.length ? '<div class="tagRow">'+n.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>' : '')+
         '<div class="noteMeta"><span>added '+formatDateShort(n.createdAt)+'</span><span>write '+formatDuration(n.writeSeconds)+'</span><span>read '+(n.readCount||0)+'&times;</span><span>'+formatDuration(n.readSeconds)+' spent reading</span></div>'+
       '</article>';
@@ -934,25 +1091,31 @@ function populateCategorySelect(selected){
     return '<option value="'+esc(c)+'" '+(c===selected?'selected':'')+'>'+esc(c)+'</option>';
   }).join("");
 }
+function refreshPlaceholder(el){
+  if(stripHtml(el.innerHTML).trim() === "") el.classList.add("isEmpty");
+  else el.classList.remove("isEmpty");
+}
 function updateTypeToggleUI(){
   var isTheory = state.editorType === "theory";
   els.typeBtnQa.classList.toggle("active", !isTheory);
   els.typeBtnTheory.classList.toggle("active", isTheory);
   if(isTheory){
     els.questionLabel.textContent = "Topic title";
-    els.editQuestion.placeholder = "e.g. The Merger of Tripura with India";
-    els.editQuestion.rows = 1;
+    els.editQuestion.setAttribute("data-placeholder", "e.g. The Merger of Tripura with India");
+    els.editQuestion.style.minHeight = "30px";
     els.answerLabel.textContent = "Notes";
-    els.editAnswer.placeholder = "Write everything you want to remember about this topic, in as much detail as you like";
-    els.editAnswer.rows = 11;
+    els.editAnswer.setAttribute("data-placeholder", "Write everything you want to remember about this topic, in as much detail as you like");
+    els.editAnswer.style.minHeight = "220px";
   } else {
     els.questionLabel.textContent = "Question";
-    els.editQuestion.placeholder = "e.g. Who founded the Manikya dynasty?";
-    els.editQuestion.rows = 2;
+    els.editQuestion.setAttribute("data-placeholder", "e.g. Who founded the Manikya dynasty?");
+    els.editQuestion.style.minHeight = "44px";
     els.answerLabel.textContent = "Answer / notes";
-    els.editAnswer.placeholder = "Write the answer, in your own words";
-    els.editAnswer.rows = 6;
+    els.editAnswer.setAttribute("data-placeholder", "Write the answer, in your own words");
+    els.editAnswer.style.minHeight = "130px";
   }
+  refreshPlaceholder(els.editQuestion);
+  refreshPlaceholder(els.editAnswer);
 }
 function openEditor(existingNote){
   state.editingNoteId = existingNote ? existingNote.id : null;
@@ -961,8 +1124,10 @@ function openEditor(existingNote){
   updateTypeToggleUI();
   var defaultCat = state.currentCategory !== "__all__" ? state.currentCategory : state.categories[0];
   populateCategorySelect(existingNote ? existingNote.category : defaultCat);
-  els.editQuestion.value = existingNote ? existingNote.question : "";
-  els.editAnswer.value = existingNote ? existingNote.answer : "";
+  els.editQuestion.innerHTML = existingNote ? (looksLikeHtml(existingNote.question) ? sanitizeHtml(existingNote.question) : plainToRichHtml(existingNote.question)) : "";
+  els.editAnswer.innerHTML = existingNote ? (looksLikeHtml(existingNote.answer) ? sanitizeHtml(existingNote.answer) : plainToRichHtml(existingNote.answer)) : "";
+  refreshPlaceholder(els.editQuestion);
+  refreshPlaceholder(els.editAnswer);
   els.editTags.value = existingNote && existingNote.tags ? existingNote.tags.join(", ") : "";
   els.editorTitle.textContent = existingNote ? "Edit note" : "Add a note";
   els.questionField.classList.remove("hasErr");
@@ -986,11 +1151,13 @@ function closeEditor(){
   state.editorOpenedAt = null;
 }
 async function saveNoteHandler(){
-  var q = els.editQuestion.value.trim();
-  var a = els.editAnswer.value.trim();
+  var q = sanitizeHtml(els.editQuestion.innerHTML);
+  var a = sanitizeHtml(els.editAnswer.innerHTML);
+  var qText = stripHtml(q).trim();
+  var aText = stripHtml(a).trim();
   var ok = true;
-  if(!q){ els.questionField.classList.add("hasErr"); ok = false; } else { els.questionField.classList.remove("hasErr"); }
-  if(!a){ els.answerField.classList.add("hasErr"); ok = false; } else { els.answerField.classList.remove("hasErr"); }
+  if(!qText){ els.questionField.classList.add("hasErr"); ok = false; } else { els.questionField.classList.remove("hasErr"); }
+  if(!aText){ els.answerField.classList.add("hasErr"); ok = false; } else { els.answerField.classList.remove("hasErr"); }
   if(!ok) return;
 
   var elapsed = clamp((Date.now() - state.editorOpenedAt) / 1000, 0, 3*3600);
@@ -1109,7 +1276,7 @@ function renderStatsView(){
     html += '<p style="color:var(--ink);font-size:13.5px;">Nothing added yet.</p>';
   } else {
     recent.forEach(function(n){
-      html += '<div class="recentRow"><span class="rq">'+esc(n.question)+'</span><span class="rmeta">'+esc(n.category)+' · '+formatRelative(n.createdAt)+'</span></div>';
+      html += '<div class="recentRow"><span class="rq">'+esc(stripHtml(n.question))+'</span><span class="rmeta">'+esc(n.category)+' · '+formatRelative(n.createdAt)+'</span></div>';
     });
   }
   html += '</div></div>';
@@ -1133,8 +1300,8 @@ function renderReadingCard(){
   els.readCategoryLabel.textContent = r.label;
   els.readPosition.textContent = (r.index+1) + " / " + r.list.length;
   els.readCat.textContent = n.category + (isTheory ? " · Theory" : "");
-  els.readQ.textContent = n.question;
-  els.readAns.textContent = n.answer;
+  els.readQ.innerHTML = safeHtml(n.question);
+  els.readAns.innerHTML = safeHtml(n.answer);
   els.readAns.classList.toggle("show", isTheory || r.revealed);
   els.readRevealBtn.classList.toggle("hidden", isTheory);
   els.readRevealBtn.textContent = r.revealed ? "Hide answer" : "Show answer";
@@ -1181,18 +1348,18 @@ function openJournal(){
       if(n.type === "theory"){
         html += '<section class="journalCard" data-id="'+n.id+'">'+
           '<div class="journalCat">'+esc(n.category)+' &middot; Theory</div>'+
-          '<div class="journalQ" style="font-size:clamp(20px,3vw,28px);margin-bottom:22px;">'+esc(n.question)+'</div>'+
-          '<div class="journalTheoryBody">'+esc(n.answer)+'</div>'+
+          '<div class="journalQ richContent" style="font-size:clamp(20px,3vw,28px);margin-bottom:22px;">'+safeHtml(n.question)+'</div>'+
+          '<div class="journalTheoryBody richContent">'+safeHtml(n.answer)+'</div>'+
         '</section>';
       } else {
         html += '<section class="journalCard" data-id="'+n.id+'">'+
           '<div class="journalCat">'+esc(n.category)+'</div>'+
-          '<div class="journalQ">'+esc(n.question)+'</div>'+
+          '<div class="journalQ richContent">'+safeHtml(n.question)+'</div>'+
           '<div class="journalHint">tap to reveal the answer</div>'+
           '<div class="journalAnsWrap"><div class="journalAnsInner">'+
             '<div class="journalCat">'+esc(n.category)+'</div>'+
-            '<div class="journalQ">'+esc(n.question)+'</div>'+
-            '<div class="journalA">'+esc(n.answer)+'</div>'+
+            '<div class="journalQ richContent">'+safeHtml(n.question)+'</div>'+
+            '<div class="journalA richContent">'+safeHtml(n.answer)+'</div>'+
           '</div></div>'+
         '</section>';
       }
@@ -1364,6 +1531,68 @@ function flushStudyTime(sec){
 }
 
 /* ---------------- static events ---------------- */
+/* ---------------- rich text toolbars ---------------- */
+function closeAllColorPops(){
+  Array.prototype.forEach.call(document.querySelectorAll(".colorPop.show"), function(p){ p.classList.remove("show"); });
+}
+function execRichCmd(targetEl, cmd, val){
+  targetEl.focus();
+  try{ document.execCommand(cmd, false, val || null); }catch(e){ console.error("format command failed", cmd, e); }
+  refreshPlaceholder(targetEl);
+}
+function bindRichToolbars(){
+  Array.prototype.forEach.call(document.querySelectorAll(".richToolbar"), function(toolbar){
+    var targetEl = document.getElementById(toolbar.getAttribute("data-target"));
+
+    /* keep the text selection alive when clicking toolbar buttons */
+    toolbar.addEventListener("mousedown", function(e){ e.preventDefault(); });
+
+    toolbar.addEventListener("click", function(e){
+      var swatch = e.target.closest(".swatchBtn");
+      if(swatch){
+        execRichCmd(targetEl, swatch.getAttribute("data-cmd"), swatch.getAttribute("data-val"));
+        closeAllColorPops();
+        return;
+      }
+      var popTrigger = e.target.closest(".colorTrigger");
+      if(popTrigger){
+        e.stopPropagation();
+        var body = popTrigger.parentElement.querySelector(".colorPop");
+        var wasOpen = body.classList.contains("show");
+        closeAllColorPops();
+        if(!wasOpen) body.classList.add("show");
+        return;
+      }
+      var btn = e.target.closest("[data-cmd]");
+      if(!btn) return;
+      var cmd = btn.getAttribute("data-cmd");
+      if(cmd === "createLink"){
+        targetEl.focus();
+        var sel = window.getSelection();
+        if(!sel || sel.toString().trim() === ""){
+          alert("Select some text first, then click the link button.");
+          return;
+        }
+        var url = prompt("Link URL (e.g. https://example.com)");
+        if(!url) return;
+        if(!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) url = "https://" + url;
+        execRichCmd(targetEl, "createLink", url);
+        return;
+      }
+      if(cmd === "formatBlock"){
+        targetEl.focus();
+        var current = "";
+        try{ current = document.queryCommandValue("formatBlock"); }catch(e){}
+        if(current && current.toLowerCase() === "h3"){ execRichCmd(targetEl, "formatBlock", "P"); }
+        else { execRichCmd(targetEl, "formatBlock", "H3"); }
+        return;
+      }
+      execRichCmd(targetEl, cmd, btn.getAttribute("data-val"));
+    });
+  });
+  document.addEventListener("click", function(){ closeAllColorPops(); });
+}
+
 function bindStaticEvents(){
   els.hamburger.addEventListener("click", openMobileSidebar);
   els.backdrop.addEventListener("click", closeMobileSidebar);
@@ -1377,6 +1606,11 @@ function bindStaticEvents(){
   els.saveNoteBtn.addEventListener("click", saveNoteHandler);
   els.typeBtnQa.addEventListener("click", function(){ state.editorType = "qa"; updateTypeToggleUI(); });
   els.typeBtnTheory.addEventListener("click", function(){ state.editorType = "theory"; updateTypeToggleUI(); });
+
+  els.editQuestion.addEventListener("input", function(){ refreshPlaceholder(els.editQuestion); });
+  els.editAnswer.addEventListener("input", function(){ refreshPlaceholder(els.editAnswer); });
+
+  bindRichToolbars();
 
   els.exportBtn.addEventListener("click", function(){ exportData(); closeMobileSidebar(); });
   els.importBtn.addEventListener("click", function(){ els.importFileInput.click(); });
